@@ -23,3 +23,9 @@ try:
 
     # read data queries
 
+except mysql.connector.Error as error:
+    print("Error connecting to MySQL:", error)
+finally:
+    if 'connection' in locals() and connection.is_connected():
+        connection.close()
+
