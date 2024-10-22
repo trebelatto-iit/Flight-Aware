@@ -1,5 +1,4 @@
 import mysql.connector
-import pyfiglet
 
 # Database connection
 host = "localhost"
@@ -21,7 +20,7 @@ try:
 
     cursor = connection.cursor()
 
-    # read data queries
+## basic read data queries
 
     ## read plane table
     def read_data_plane():
@@ -47,10 +46,40 @@ try:
         select_query = ""
         cursor.execute(select_query)
 
+    ## read passenger table
+    def read_data_passenger():
+        select_query = ""
+        cursor.execute(select_query)
 
+    ## read booking table
+    def read_data_booking():
+        select_query = ""
+        cursor.execute(select_query)
 
+## more advanced read queries
 
+## update data 
 
+## delete data
+
+## advanced functions
+
+## Main Program
+
+    def main():
+            while True:
+                print("\nMenu:")
+                print("1. read data")
+                print("2. update data")
+                print("3. insert data")
+                print("4. delete data")
+                print("5. basic functions")
+                print("6. advanced functions")
+                print("7. exit")
+                choice = input("Enter your choice: \n")
+
+                ## determine what to do with given choice using above functions
+           
 
 except mysql.connector.Error as error:
     print("Error connecting to MySQL:", error)
