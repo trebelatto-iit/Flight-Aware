@@ -29,32 +29,53 @@ try:
         planes = cursor.fetchall()
         print("Plane Data:")
         for plane in planes:
-            print(f"PlaneID: {plane[0]} | PlaneModel: {plane[1]} | Airline: {plane[2]}")
+            print(f"Plane ID: {plane[0]} | Plane Model: {plane[1]} | Airline: {plane[2]}")
 
     ## read airline table
     def read_data_airline():
-        select_query = ""
+        select_query = "SELECT AirlineName, AirlineCode, Country FROM Airline;"
         cursor.execute(select_query)
+        airlines = cursor.fetchall()
+        print("Airline Data:")
+        for airline in airlines:
+            print(f"Airline Name: {airline[0]} | Airline Code: {airline[1]} | Country: {airline[2]}")
 
     ## read flight table
     def read_data_flight():
         select_query = ""
         cursor.execute(select_query)
+        flights = cursor.fetchall()
+        print("Flight Data:")
+        for flight in flights:
+            print(f"Flight Number: {flight[1]} | Airline ID: {flight[0]} | Plane ID: {flight[2]} | Departing: {flight[3]} | Arriving: {flight[4]} | Date: {flight[5]} | Status: {flight[6]}")
 
     ## read airport table
     def read_data_airport():
         select_query = ""
         cursor.execute(select_query)
+        airports = cursor.fetchall()
+        print("Airport Data:")
+        for airport in airports:
+            print(f"Aiport Name: {airport[0]} | Airport Code: {airport[1]} | Location: {airport[2]}")
+
 
     ## read passenger table
     def read_data_passenger():
         select_query = ""
         cursor.execute(select_query)
+        passengers = cursor.fetchall()
+        print("Passenger Data:")
+        for passenger in passengers:
+            print(f"First Name: {passenger[1]} | Last Name: {passenger[0]} | Passport ID: {passenger[2]}")
 
     ## read booking table
     def read_data_booking():
         select_query = ""
         cursor.execute(select_query)
+        bookings = cursor.fetchall()
+        print("Booking Data:")
+        for booking in bookings:
+            print(f"Passenger ID: {booking[0]} | Flight ID: {booking[1]} | Seat Number {booking[2]} | Date: {booking[3]}")
 
 ## more advanced read queries
 
@@ -86,4 +107,9 @@ except mysql.connector.Error as error:
 finally:
     if 'connection' in locals() and connection.is_connected():
         connection.close()
+
+## Execute
+read_data_plane()
+
+
 
