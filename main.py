@@ -42,7 +42,7 @@ try:
 
     ## read flight table
     def read_data_flight():
-        select_query = ""
+        select_query = "SELECT FlightNum, AirlineID, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status FROM Flight;"
         cursor.execute(select_query)
         flights = cursor.fetchall()
         print("Flight Data:")
@@ -101,6 +101,7 @@ try:
 
                 ## determine what to do with given choice using above functions
            
+    read_data_airport()
 
 except mysql.connector.Error as error:
     print("Error connecting to MySQL:", error)
@@ -109,7 +110,6 @@ finally:
         connection.close()
 
 ## Execute
-read_data_plane()
 
 
 
