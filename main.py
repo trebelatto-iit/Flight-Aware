@@ -87,14 +87,147 @@ try:
 
 ## update data
 
- 
+    def select_airline():
+        # Define a dictionary mapping user input to airline names and actions
+        airlines = {
+            1: "American",
+            2: "Delta",
+            3: "United",
+            4: "Southwest",
+            5: "Alaska",
+            6: "JetBlue",
+            7: "Spirit",
+            8: "Frontier",
+            9: "Hawaiian",
+            10: "Allegiant"
+        }
+
+        # Define a function to simulate different behaviors based on the airline selection
+        def handle_airline_selection(selection):
+            # Define airline codes inside this function and return the selected airline code
+            match selection:
+                case 1:
+                    print("You selected American.")
+                    return "AA"
+                case 2:
+                    print("You selected Delta.")
+                    return "DL"
+                case 3:
+                    print("You selected United.")
+                    return "UA"
+                case 4:
+                    print("You selected Southwest.")
+                    return "WN"
+                case 5:
+                    print("You selected Alaska.")
+                    return "AS"
+                case 6:
+                    print("You selected JetBlue.")
+                    return "B6"
+                case 7:
+                    print("You selected Spirit.")
+                    return "NK"
+                case 8:
+                    print("You selected Frontier.")
+                    return "F9"
+                case 9:
+                    print("You selected Hawaiian.")
+                    return "HA"
+                case 10:
+                    print("You selected Allegiant.")
+                    return "G4"
+        
+        while True:  # Keep prompting the user until they provide valid input
+            # Display airline list with corresponding numbers
+            print("Please select an airline by entering the corresponding number:")
+            for number, airline in airlines.items():
+                print(f"{number}. {airline}")
+            
+            try:
+                # Get the user's choice and convert to integer
+                choice = int(input("Enter the number of the airline: "))
+                
+                # Handle the airline selection and return the code if valid
+                if choice in airlines:
+                    return handle_airline_selection(choice)
+                else:
+                    print("Invalid selection. Please select a valid number between 1 and 10.")
+                    
+            except ValueError:
+                print("Invalid input. Please enter a valid number between 1 and 10.")
+
+    def insert_flight_data():
+        airlineCode = select_airline()  # Get the airline code
+
+        # Loop until valid input (3 digits) is entered
+        while True:
+            flightNumDigits = input("Enter flight number (3 digits: '123'): ")
+            # Check if the input is exactly 3 digits
+            if flightNumDigits.isdigit() and len(flightNumDigits) == 3:
+                break  # Exit loop if the input is valid
+            else:
+                print("Invalid input. Please enter exactly 3 digits.")
+        
+        flightNumber = airlineCode + flightNumDigits  # Combine airline code and flight number
+        def get_airport_code(location):
+            # Loop until valid input (3 letters) is entered
+            while True:
+                airportCode = input("Enter " + location + " airport code (3 letters): ").upper()  # Convert input to uppercase
+                # Check if the input is exactly 3 letters
+                if airportCode.isalpha() and len(airportCode) == 3:
+                    return airportCode  # Return the valid airport code
+                else:
+                    print("Invalid input. Please enter exactly 3 letters.")
+        departingAirportCode = get_airport_code("Departing")
+        arrivingAirportCode = get_airport_code("Arriving")
+        def get_date():
+            # Loop to get valid month
+            while True:
+                month = input("Enter the month (MM): ").zfill(2)  # Ensure 2 digits by zero-padding
+                # Check if input is a digit and between 1 and 12
+                if month.isdigit() and 1 <= int(month) <= 12:
+                    break
+                else:
+                    print("Invalid month. Please enter a valid month (01-12).")
+
+            # Loop to get valid day
+            while True:
+                day = input("Enter the day (DD): ").zfill(2)  # Ensure 2 digits by zero-padding
+                # Check if input is a digit and between 1 and 31
+                if day.isdigit() and 1 <= int(day) <= 31:
+                    break
+                else:
+                    print("Invalid day. Please enter a valid day (01-31).")
+            
+            # Loop to get valid year
+            while True:
+                year = input("Enter the year (YYYY): ")
+                # Check if input is a 4-digit year
+                if year.isdigit() and len(year) == 4:
+                    break
+                else:
+                    print("Invalid year. Please enter a valid 4-digit year.")
+            
+            # Combine month, day, and year into MM/DD/YYYY format
+            date = f"{month}/{day}/{year}"
+            
+            return date
+
+        # Example usage
+        formattedDate = get_date()
+        print(f"Flight Number: {flightNumber} | Departing Airport: {departingAirportCode} | Arriving Airport: {arrivingAirportCode} | Date: {formattedDate}")
+        
+    insert_flight_data()
+
+
+
+
+
 
 ## delete data
 
 ## advanced functions
-
 ## Main Program
-
     def main():
             while True:
                 print("\nMenu:")
@@ -108,7 +241,8 @@ try:
                 choice = input("Enter your choice: \n")
 
                 ## determine what to do with given choice using above functions
-           
+## Execute
+
 
 except mysql.connector.Error as error:
     print("Error connecting to MySQL:", error)
@@ -116,7 +250,6 @@ finally:
     if 'connection' in locals() and connection.is_connected():
         connection.close()
 
-## Execute
 
 
 
