@@ -1,4 +1,5 @@
 import mysql.connector
+import random
 
 # Database connection
 host = "localhost"
@@ -217,15 +218,17 @@ try:
 
         # Collecting flight date from the user
         flight_date = get_date()
+        randomNum = random.randint(100, 999)  # Generate a random 3-digit number
+        PlaneNum = f"N{randomNum}{airlineCode}"
 
         # Define SQL insert query
         insert_query = """
-            INSERT INTO Flight (airline_code, flight_number, departing_airport, arriving_airport, flight_date)
+            INSERT INTO Flight (FlightNum, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status)
             VALUES (%s, %s, %s, %s, %s)
         """
         
         # Prepare data to insert
-        flight_data = (airlineCode, flightNumber, departingAirportCode, arrivingAirportCode, flight_date)
+        flight_data = (flightNumber, PlaneNum, departingAirportCode, arrivingAirportCode, flight_date, "On Time")
 
         # Execute the query
         try:
@@ -236,8 +239,8 @@ try:
             print(f"Error: {err}")
             connection.rollback()  # Roll back if any error occurs
 
-        # Example function usage
-        insert_flight_data()
+    # Test
+    insert_flight_data()
 
     ## Insert Booking Data
 
@@ -245,26 +248,37 @@ try:
         firstName = input("Enter passenger legal first name:")
         lastName = input("Enter passenger legal last name:")
         # Unifinished
-        
+
     ## Insert 
+
+    def insert_passenger_data():
+        pass
+
+
 
 ## delete data
 
-## advanced functions
+    def delete_flight():
+        pass
+    def delete_booking():
+        pass
+    def delete_passenger():
+        pass
+
+## advanced functions (deliverable 5)
+
 ## Main Program
     def main():
             while True:
                 print("\nMenu:")
-                print("1. read data")
-                print("2. update data")
-                print("3. insert data")
-                print("4. delete data")
-                print("5. basic functions")
-                print("6. advanced functions")
-                print("7. exit")
+                print("1. Read data")
+                print("2. Update data")
+                print("3. Insert data")
+                print("4. Delete data")
+                print("5. Exit")
                 choice = input("Enter your choice: \n")
-
                 ## determine what to do with given choice using above functions
+                
 ## Execute
 
 
