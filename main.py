@@ -87,7 +87,10 @@ try:
 
 ## update data
 
+## Insert Data
+
     def select_airline():
+
         # Define a dictionary mapping user input to airline names and actions
         airlines = {
             1: "American",
@@ -156,73 +159,94 @@ try:
             except ValueError:
                 print("Invalid input. Please enter a valid number between 1 and 10.")
 
-    def insert_flight_data():
-        airlineCode = select_airline()  # Get the airline code
+    ## Insert Flight Data 
+    import mysql.connector
 
-        # Loop until valid input (3 digits) is entered
+# Set up the database connection
+
+    def insert_flight_data():
+        # Establish a connection to the database
+
+
+        # Prompt the user to enter flight data
+        airlineCode = select_airline()
+
         while True:
-            flightNumDigits = input("Enter flight number (3 digits: '123'): ")
-            # Check if the input is exactly 3 digits
+            flightNumDigits = input("Enter flight number (3 digits: '123'): ").strip()
             if flightNumDigits.isdigit() and len(flightNumDigits) == 3:
-                break  # Exit loop if the input is valid
+                break
             else:
                 print("Invalid input. Please enter exactly 3 digits.")
         
-        flightNumber = airlineCode + flightNumDigits  # Combine airline code and flight number
+        flightNumber = airlineCode + flightNumDigits
+
         def get_airport_code(location):
-            # Loop until valid input (3 letters) is entered
             while True:
-                airportCode = input("Enter " + location + " airport code (3 letters): ").upper()  # Convert input to uppercase
-                # Check if the input is exactly 3 letters
+                airportCode = input(f"Enter {location} airport code (3 letters): ").strip().upper()
                 if airportCode.isalpha() and len(airportCode) == 3:
-                    return airportCode  # Return the valid airport code
+                    return airportCode
                 else:
                     print("Invalid input. Please enter exactly 3 letters.")
+        
         departingAirportCode = get_airport_code("Departing")
         arrivingAirportCode = get_airport_code("Arriving")
+        
         def get_date():
-            # Loop to get valid month
             while True:
-                month = input("Enter the month (MM): ").zfill(2)  # Ensure 2 digits by zero-padding
-                # Check if input is a digit and between 1 and 12
+                month = input("Enter the month (MM): ").zfill(2)
                 if month.isdigit() and 1 <= int(month) <= 12:
                     break
                 else:
                     print("Invalid month. Please enter a valid month (01-12).")
-
-            # Loop to get valid day
+            
             while True:
-                day = input("Enter the day (DD): ").zfill(2)  # Ensure 2 digits by zero-padding
-                # Check if input is a digit and between 1 and 31
+                day = input("Enter the day (DD): ").zfill(2)
                 if day.isdigit() and 1 <= int(day) <= 31:
                     break
                 else:
                     print("Invalid day. Please enter a valid day (01-31).")
             
-            # Loop to get valid year
             while True:
                 year = input("Enter the year (YYYY): ")
-                # Check if input is a 4-digit year
                 if year.isdigit() and len(year) == 4:
                     break
                 else:
                     print("Invalid year. Please enter a valid 4-digit year.")
             
-            # Combine month, day, and year into MM/DD/YYYY format
-            date = f"{month}/{day}/{year}"
-            
-            return date
+            return f"{year}-{month}-{day}"  # MySQL prefers YYYY-MM-DD format
 
-        # Example usage
-        formattedDate = get_date()
-        print(f"Flight Number: {flightNumber} | Departing Airport: {departingAirportCode} | Arriving Airport: {arrivingAirportCode} | Date: {formattedDate}")
+        # Collecting flight date from the user
+        flight_date = get_date()
+
+        # Define SQL insert query
+        insert_query = """
+            INSERT INTO Flight (airline_code, flight_number, departing_airport, arriving_airport, flight_date)
+            VALUES (%s, %s, %s, %s, %s)
+        """
         
-    insert_flight_data()
+        # Prepare data to insert
+        flight_data = (airlineCode, flightNumber, departingAirportCode, arrivingAirportCode, flight_date)
 
+        # Execute the query
+        try:
+            cursor.execute(insert_query, flight_data)
+            connection.commit()  # Commit transaction
+            print("Flight data inserted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
 
+        # Example function usage
+        insert_flight_data()
 
+    ## Insert Booking Data
 
-
+    def insert_booking_data():
+        firstName = input("Enter passenger legal first name:")
+        lastName = input("Enter passenger legal last name:")
+        # Unifinished
+        
+    ## Insert 
 
 ## delete data
 
@@ -249,7 +273,3 @@ except mysql.connector.Error as error:
 finally:
     if 'connection' in locals() and connection.is_connected():
         connection.close()
-
-
-
-
