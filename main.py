@@ -81,6 +81,26 @@ try:
 
 ## Update data
 
+    def update_data():
+        player_id = input("Enter player ID to update: ")
+        goals = int(input("Enter new goals: "))
+        assists = int(input("Enter new assists: "))
+        yellow_cards = int(input("Enter new yellow cards: "))
+        red_cards = int(input("Enter new red cards: "))
+
+        update_query = "UPDATE player SET goals = %s, assists = %s, yellowcards = %s, redcards = %s WHERE PID = %s"
+        cursor.execute(update_query, (goals, assists, yellow_cards, red_cards, player_id))
+        connection.commit()
+        print("Data updated successfully.")
+
+    ## Update Plane
+    ## Update Airline
+    ## Update Airport
+    ## Update Passenger
+    ## Update Booking
+    ## Update Flight
+
+
 ## Insert Data
 
     ## Functions to help with the insert functions
