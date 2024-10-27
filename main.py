@@ -21,9 +21,9 @@ try:
 
     cursor = connection.cursor()
 
-## basic read data queries
+## Basic Read Data Queries
 
-    ## read plane table
+    ## Read Plane Table
     def read_data_plane():
         select_query = "SELECT PlaneID, PlaneModel, Airline FROM Plane;"
         cursor.execute(select_query)
@@ -32,9 +32,7 @@ try:
         for plane in planes:
             print(f"Plane ID: {plane[0]} | Plane Model: {plane[1]} | Airline: {plane[2]}")
     
-    #read_data_plane()
-
-    ## read airline table
+    ## Read Airline Table
     def read_data_airline():
         select_query = "SELECT AirlineName, AirlineCode, Country FROM Airline;"
         cursor.execute(select_query)
@@ -42,9 +40,8 @@ try:
         print("Airline Data:")
         for airline in airlines:
             print(f"Airline Name: {airline[0]} | Airline Code: {airline[1]} | Country: {airline[2]}")
-    #read_data_airline()
-
-    ## read flight table
+    
+    ## Read Flight Table
     def read_data_flight():
         select_query = "SELECT FlightNum, AirlineID, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status FROM Flight;"
         cursor.execute(select_query)
@@ -52,9 +49,8 @@ try:
         print("Flight Data:")
         for flight in flights:
             print(f"Flight Number: {flight[0]} | Airline ID: {flight[1]} | Plane ID: {flight[2]} | Departing: {flight[3]} | Arriving: {flight[4]} | Date: {flight[5]} | Status: {flight[6]}")
-    #read_data_flight()
 
-    ## read airport table
+    ## Read Airport Table
     def read_data_airport():
         select_query = "SELECT AirportName, AirportCode, Location FROM Airport;"
         cursor.execute(select_query)
@@ -62,9 +58,8 @@ try:
         print("Airport Data:")
         for airport in airports:
             print(f"Aiport Name: {airport[0]} | Airport Code: {airport[1]} | Location: {airport[2]}")
-    #read_data_airport()
 
-    ## read passenger table
+    ## Read Passenger Table
     def read_data_passenger():
         select_query = "SELECT LastName, FirstName, PassportID FROM Passenger;"
         cursor.execute(select_query)
@@ -72,9 +67,8 @@ try:
         print("Passenger Data:")
         for passenger in passengers:
             print(f"Name: {passenger[1]} {passenger[0]} | Passport ID: {passenger[2]}")
-    #read_data_passenger()
 
-    ## read booking table
+    ## Read Booking Table
     def read_data_booking():
         select_query = "SELECT PassengerID, FlightID, SeatNumber, Date FROM Booking;"
         cursor.execute(select_query)
@@ -82,14 +76,12 @@ try:
         print("Booking Data:")
         for booking in bookings:
             print(f"Passenger ID: {booking[0]} | Flight ID: {booking[1]} | Seat Number {booking[2]} | Date: {booking[3]}")
-    #read_data_booking()
 
-## more advanced read queries
-
-## update data
+## Update data
 
 ## Insert Data
 
+    ## Functions to help with the insert functions
     def select_airline():
 
         # Define a dictionary mapping user input to airline names and actions
@@ -159,12 +151,32 @@ try:
                     
             except ValueError:
                 print("Invalid input. Please enter a valid number between 1 and 10.")
+    
+    def get_date():
+            while True:
+                month = input("Enter the month (MM): ").zfill(2)
+                if month.isdigit() and 1 <= int(month) <= 12:
+                    break
+                else:
+                    print("Invalid month. Please enter a valid month (01-12).")
+            
+            while True:
+                day = input("Enter the day (DD): ").zfill(2)
+                if day.isdigit() and 1 <= int(day) <= 31:
+                    break
+                else:
+                    print("Invalid day. Please enter a valid day (01-31).")
+            
+            while True:
+                year = input("Enter the year (YYYY): ")
+                if year.isdigit() and len(year) == 4:
+                    break
+                else:
+                    print("Invalid year. Please enter a valid 4-digit year.")
+            
+            return f"{year}-{month}-{day}"  # MySQL prefers YYYY-MM-DD format
 
-    ## Insert Flight Data 
-    import mysql.connector
-
-# Set up the database connection
-
+    ## Insert Passenger Data
     def insert_flight_data():
         # Establish a connection to the database
 
@@ -192,29 +204,7 @@ try:
         departingAirportCode = get_airport_code("Departing")
         arrivingAirportCode = get_airport_code("Arriving")
         
-        def get_date():
-            while True:
-                month = input("Enter the month (MM): ").zfill(2)
-                if month.isdigit() and 1 <= int(month) <= 12:
-                    break
-                else:
-                    print("Invalid month. Please enter a valid month (01-12).")
-            
-            while True:
-                day = input("Enter the day (DD): ").zfill(2)
-                if day.isdigit() and 1 <= int(day) <= 31:
-                    break
-                else:
-                    print("Invalid day. Please enter a valid day (01-31).")
-            
-            while True:
-                year = input("Enter the year (YYYY): ")
-                if year.isdigit() and len(year) == 4:
-                    break
-                else:
-                    print("Invalid year. Please enter a valid 4-digit year.")
-            
-            return f"{year}-{month}-{day}"  # MySQL prefers YYYY-MM-DD format
+        get_date()
 
         # Collecting flight date from the user
         flight_date = get_date()
@@ -239,33 +229,90 @@ try:
             print(f"Error: {err}")
             connection.rollback()  # Roll back if any error occurs
 
-    # Test
-    insert_flight_data()
 
     ## Insert Booking Data
-
     def insert_booking_data():
-        firstName = input("Enter passenger legal first name:")
-        lastName = input("Enter passenger legal last name:")
-        # Unifinished
-
-    ## Insert 
-
+        passsengerID = input("Enter PassengerID: ")
+        flightID = input("Enter FlightID: ")
+        seatNum = input("Enter seat number: eg.(32c)")
+        date = get_date()
+        
+        ## Create Query
+        insert_query = """
+            INSERT INTO Booking (PassengerID, FlightNum, SeatNum, Date)
+            VALUES (%s, %s, %s, %s)
+        """
+        # Prepare data to insert
+        booking_data = (passsengerID, flightID, seatNum, date)
+        # Execute the query
+        try:
+            cursor.execute(insert_query, booking_data)
+            connection.commit()  # Commit transaction
+            print("Booking data inserted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+    
+    ## Insert Passenger  
     def insert_passenger_data():
-        pass
+        firstName = input("Enter passenger legal first name: ")
+        lastName = input("Enter passenger legal last name: ")
+        passportID = input("Enter passenger's passportID: ")
+        ## Create Query
+        insert_query = """
+            INSERT INTO Passenger (LastName, FirstName, PassportID)
+            VALUES (%s, %s, %s)
+        """
+        # Prepare data to insert
+        passenger_data = (lastName, firstName, passportID)
+        # Execute the query
+        try:
+            cursor.execute(insert_query, passenger_data)
+            connection.commit()  # Commit transaction
+            print("Passenger data inserted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
 
+## Delete Data
 
-
-## delete data
-
+    ## Delete Flight
     def delete_flight():
-        pass
-    def delete_booking():
-        pass
-    def delete_passenger():
-        pass
+        try:
+            flightNum = input("Enter Flight Number to delete: ")
+            deleteQuery = "DELETE FROM Flight WHERE FlightNum = %s"
+            cursor.execute(deleteQuery, (flightNum,))
+            connection.commit()
+            print("Flight deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
 
-## advanced functions (deliverable 5)
+    ## Delete Flight
+    def delete_booking():
+        try:
+            bookingID = input("Enter Booking ID to delete: ")
+            deleteQuery = "DELETE FROM Booking WHERE BookingID = %s"
+            cursor.execute(deleteQuery, (bookingID,))
+            connection.commit()
+            print("Booking deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
+
+    ## Delete Passenger
+    def delete_passenger():
+        try:
+            passportID = input("Enter passenger's passport number to delete: ")
+            deleteQuery = "DELETE FROM Passenger WHERE PassportID = %s"
+            cursor.execute(deleteQuery, (passportID,))
+            connection.commit()
+            print("Passenger deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
+
+## Advanced Functions (Deliverable 5)
 
 ## Main Program
     def main():
@@ -278,9 +325,8 @@ try:
                 print("5. Exit")
                 choice = input("Enter your choice: \n")
                 ## determine what to do with given choice using above functions
-                
-## Execute
 
+## Execute
 
 except mysql.connector.Error as error:
     print("Error connecting to MySQL:", error)
