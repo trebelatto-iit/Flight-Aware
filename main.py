@@ -1,11 +1,12 @@
 import mysql.connector
 import random
+import re
 
 # Database connection
 host = "localhost"
 user = "root"
 password = "admintomas17"
-database = "flight_aware"
+database = "flight_aware2"
 
 try:
     # Connect to mysql
@@ -25,7 +26,7 @@ try:
 
     ## Read Plane Table
     def read_data_plane():
-        select_query = "SELECT PlaneID, PlaneModel, Airline FROM Plane;"
+        select_query = "SELECT PlaneID, PlaneModel, AirlineCode FROM Plane;"
         cursor.execute(select_query)
         planes = cursor.fetchall()
         print("Plane Data:")
@@ -43,13 +44,14 @@ try:
     
     ## Read Flight Table
     def read_data_flight():
-        select_query = "SELECT FlightNum, AirlineID, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status FROM Flight;"
+        select_query = "SELECT AirlineCode, FlightNum, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status FROM Flight;"
         cursor.execute(select_query)
         flights = cursor.fetchall()
         print("Flight Data:")
         for flight in flights:
-            print(f"Flight Number: {flight[0]} | Airline ID: {flight[1]} | Plane ID: {flight[2]} | Departing: {flight[3]} | Arriving: {flight[4]} | Date: {flight[5]} | Status: {flight[6]}")
-
+            print(f"Airline: {flight[0]} | Flight Number: {flight[1]} | Plane ID: {flight[2]} | Departing: {flight[3]} | Arriving: {flight[4]} | Date: {flight[5]} | Status: {flight[6]}")
+    #read_data_flight()
+    
     ## Read Airport Table
     def read_data_airport():
         select_query = "SELECT AirportName, AirportCode, Location FROM Airport;"
@@ -67,15 +69,15 @@ try:
         print("Passenger Data:")
         for passenger in passengers:
             print(f"Name: {passenger[1]} {passenger[0]} | Passport ID: {passenger[2]}")
-
+    
     ## Read Booking Table
     def read_data_booking():
-        select_query = "SELECT PassengerID, FlightID, SeatNumber, Date FROM Booking;"
+        select_query = "SELECT BookingID, PassengerID, FlightID, SeatNumber, Date FROM Booking;"
         cursor.execute(select_query)
         bookings = cursor.fetchall()
         print("Booking Data:")
         for booking in bookings:
-            print(f"Passenger ID: {booking[0]} | Flight ID: {booking[1]} | Seat Number {booking[2]} | Date: {booking[3]}")
+            print(f"Booking Number: {booking[0]} Passenger ID: {booking[1]} | Flight ID: {booking[2]} | Seat Number: {booking[3]} | Date: {booking[4]}")
 
 ## Update data
 
@@ -178,9 +180,6 @@ try:
 
     ## Insert Passenger Data
     def insert_flight_data():
-        # Establish a connection to the database
-
-
         # Prompt the user to enter flight data
         airlineCode = select_airline()
 
@@ -203,22 +202,15 @@ try:
         
         departingAirportCode = get_airport_code("Departing")
         arrivingAirportCode = get_airport_code("Arriving")
-        
-        get_date()
-
-        # Collecting flight date from the user
-        flight_date = get_date()
-        randomNum = random.randint(100, 999)  # Generate a random 3-digit number
-        PlaneNum = f"N{randomNum}{airlineCode}"
-
-        # Define SQL insert query
+        planeID = f"301 {airlineCode}"
+        flightDate = get_date()
         insert_query = """
-            INSERT INTO Flight (FlightNum, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO Flight (AirlineCode, FlightNum, PlaneID, DepartingAirportCode, ArrivingAirportCode, Date, Status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         
         # Prepare data to insert
-        flight_data = (flightNumber, PlaneNum, departingAirportCode, arrivingAirportCode, flight_date, "On Time")
+        flight_data = (airlineCode, flightNumber, planeID, departingAirportCode, arrivingAirportCode, flightDate, "On Time")
 
         # Execute the query
         try:
@@ -229,7 +221,6 @@ try:
             print(f"Error: {err}")
             connection.rollback()  # Roll back if any error occurs
 
-
     ## Insert Booking Data
     def insert_booking_data():
         passsengerID = input("Enter PassengerID: ")
@@ -239,7 +230,7 @@ try:
         
         ## Create Query
         insert_query = """
-            INSERT INTO Booking (PassengerID, FlightNum, SeatNum, Date)
+            INSERT INTO Booking (PassengerID, FlightID, SeatNumber, Date)
             VALUES (%s, %s, %s, %s)
         """
         # Prepare data to insert
@@ -257,14 +248,23 @@ try:
     def insert_passenger_data():
         firstName = input("Enter passenger legal first name: ")
         lastName = input("Enter passenger legal last name: ")
-        passportID = input("Enter passenger's passportID: ")
-        ## Create Query
+
+        # Validate passportID format: one letter followed by exactly eight digits
+        while True:
+            passportID = input("Enter passenger's passportID (format: X########): ")
+            if re.fullmatch(r"[A-Za-z]\d{8}", passportID):
+                break  # Valid passportID format, exit the loop
+            else:
+                print("Invalid PassportID format. Please enter one letter followed by 8 digits (e.g., A12345678).")
+
+        # Create Query
         insert_query = """
             INSERT INTO Passenger (LastName, FirstName, PassportID)
             VALUES (%s, %s, %s)
         """
         # Prepare data to insert
         passenger_data = (lastName, firstName, passportID)
+        
         # Execute the query
         try:
             cursor.execute(insert_query, passenger_data)
@@ -273,6 +273,77 @@ try:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             connection.rollback()  # Roll back if any error occurs
+
+    ## Insert Airport
+    def insert_airport_data():
+        airport_code = input("Enter the 2-character airport code: ").upper()
+
+        # Validate airport code format: exactly two uppercase characters
+        while not re.fullmatch(r"[A-Z]{2}", airport_code):
+            print("Invalid Airport Code. Please enter exactly two uppercase letters (e.g., 'NY').")
+            airport_code = input("Enter the 2-character airport code: ").upper()
+
+        airport_name = input("Enter the airport name: ")
+        location = input("Enter the airport location: ")
+
+        # Create query
+        insert_query = """
+            INSERT INTO Airport (AirportCode, AirportName, Location)
+            VALUES (%s, %s, %s)
+        """
+        # Prepare data to insert
+        airport_data = (airport_code, airport_name, location)
+
+        # Execute the query
+        try:
+            cursor.execute(insert_query, airport_data)
+            connection.commit()  # Commit transaction
+            print("Airport data inserted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
+    ## Insert Plane
+    def insert_plane_data():
+        # Ask for the AirlineCode and validate it to be exactly two uppercase letters
+        while True:
+            airline_code = input("Enter the 2-character Airline Code: ").upper()
+            if re.fullmatch(r"[A-Z]{2}", airline_code):
+                break
+            else:
+                print("Invalid Airline Code. Please enter exactly two uppercase letters (e.g., 'AA').")
+        
+        # Ask for the three-digit part of the PlaneID and validate it
+        while True:
+            plane_number = input("Enter the 3-digit plane number: ")
+            if re.fullmatch(r"\d{3}", plane_number):
+                break
+            else:
+                print("Invalid plane number. Please enter exactly three digits (e.g., '123').")
+        
+        # Construct the PlaneID
+        plane_id = f"N{plane_number}{airline_code}"
+        
+        # Ask for the plane model
+        plane_model = input("Enter the plane model: ")
+
+        # Create the query
+        insert_query = """
+            INSERT INTO Plane (PlaneID, PlaneModel, AirlineCode)
+            VALUES (%s, %s, %s)
+        """
+        # Prepare data to insert
+        plane_data = (plane_id, plane_model, airline_code)
+
+        # Execute the query
+        try:
+            cursor.execute(insert_query, plane_data)
+            connection.commit()  # Commit transaction
+            print("Plane data inserted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
 
 ## Delete Data
 
@@ -287,8 +358,8 @@ try:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             connection.rollback()
-
-    ## Delete Flight
+    
+    ## Delete Booking
     def delete_booking():
         try:
             bookingID = input("Enter Booking ID to delete: ")
@@ -299,7 +370,7 @@ try:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             connection.rollback()
-
+    
     ## Delete Passenger
     def delete_passenger():
         try:
@@ -312,21 +383,99 @@ try:
             print(f"Error: {err}")
             connection.rollback()
 
+    ## Delete Airport
+    def delete_airport():
+        try:
+            airportCode = input("Eneter airport's code to delete (ABC): ")
+            deleteQuery = "DELETE FROM Airport WHERE AirportCode = %s"
+            cursor.execute(deleteQuery, (airportCode,))
+            connection.commit()
+            print("Airport deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
+
+    ## Delete Plane
+    def delete_plane():
+        try:
+            planeID = input("Enter Plane ID to delete: ")
+            deleteQuery = "DELETE FROM Plane WHERE PlaneID = %s"
+            cursor.execute(deleteQuery, (planeID,))
+            connection.commit()
+            print("Plane deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
+
+    ## Delete Airline
+    def delete_airline():
+        try:
+            airlineCode = input("Enter Airline Code to delete: (XX) ")
+            deleteQuery = "DELETE FROM Airline WHERE AirlineCode = %s"
+            cursor.execute(deleteQuery, (airlineCode,))
+            connection.commit()
+            print("Airline deleted successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()
+
 ## Advanced Functions (Deliverable 5)
 
 ## Main Program
+    def select_table():
+        print("\nSelect a table:")
+        print("1. Planes")
+        print("2. Airlines")
+        print("3. Flights")
+        print("4. Airports")
+        print("5. Passengers")
+        print("6. Bookings")
+        table_choice = input("Enter your table choice: ")
+        
+        tables = {
+            '1': 'Planes',
+            '2': 'Airlines',
+            '3': 'Flights',
+            '4': 'Airports',
+            '5': 'Passengers',
+            '6': 'Bookings'
+        }
+        return tables.get(table_choice, None)
+
     def main():
-            while True:
-                print("\nMenu:")
-                print("1. Read data")
-                print("2. Update data")
-                print("3. Insert data")
-                print("4. Delete data")
-                print("5. Exit")
-                choice = input("Enter your choice: \n")
-                ## determine what to do with given choice using above functions
+        while True:
+            print("\nMenu:")
+            print("1. Read data")
+            print("2. Update data")
+            print("3. Insert data")
+            print("4. Delete data")
+            print("5. Exit")
+            
+            choice = input("Enter your choice: ")
+            
+            if choice == '5':
+                print("Exiting...")
+                break
+            
+            table = select_table()
+            if not table:
+                print("Invalid table choice. Please try again.")
+                continue
+
+            if choice == '1':
+                print(f"Reading from table {table}")
+            elif choice == '2':
+                print(f"Updating table {table}")
+            elif choice == '3':
+                print(f"Inserting into table {table}")
+            elif choice == '4':
+                print(f"Deleting from table {table}")
+            else:
+                print("Invalid choice. Please try again.")
 
 ## Execute
+    main()
+
 
 except mysql.connector.Error as error:
     print("Error connecting to MySQL:", error)
