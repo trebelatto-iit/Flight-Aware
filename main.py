@@ -4,8 +4,6 @@ import re
 import pyfiglet
 
 
-
-
 # Database connection
 host = "localhost"
 user = "root"
@@ -81,226 +79,6 @@ try:
         print("Booking Data:")
         for booking in bookings:
             print(f"Booking Number: {booking[0]} Passenger ID: {booking[1]} | Flight ID: {booking[2]} | Seat Number: {booking[3]} | Date: {booking[4]}")
-
-## Update data
-
-    ## Update Plane
-    def update_plane():
-        plane_id = input("Enter Plane ID to update: ")
-
-        # Validate AirlineCode format: must be exactly two uppercase letters
-        while True:
-            airline = input("Enter new airline associated with the plane (2-letter code): ").upper()
-            if re.fullmatch(r"[A-Z]{2}", airline):
-                break
-            else:
-                print("Invalid Airline Code. Please enter exactly two uppercase letters (e.g., 'AA').")
-
-        # Prepare the update query
-        update_query = "UPDATE Plane SET AirlineCode = %s WHERE PlaneID = %s"
-        
-        # Execute the query
-        try:
-            cursor.execute(update_query, (airline, plane_id))
-            connection.commit()
-            print("Data updated successfully.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-
-    ## Update Airline
-    def update_airport():
-        # Validate airport code format: exactly three uppercase letters
-        while True:
-            airport_code = input("Enter the 3-character airport code to update: ").upper()
-            if re.fullmatch(r"[A-Z]{3}", airport_code):
-                break
-            else:
-                print("Invalid Airport Code. Please enter exactly three uppercase letters (e.g., 'JFK').")
-
-        # Collect new information for the airport
-        airport_name = input("Enter the new airport name: ")
-        location = input("Enter the new airport location: ")
-
-        # Create update query
-        update_query = """
-            UPDATE Airport
-            SET AirportName = %s, Location = %s
-            WHERE AirportCode = %s
-        """
-        # Prepare data to update
-        airport_data = (airport_name, location, airport_code)
-
-        # Execute the query
-        try:
-            cursor.execute(update_query, airport_data)
-            connection.commit()  # Commit transaction
-            if cursor.rowcount > 0:
-                print("Airport data updated successfully.")
-            else:
-                print("No airport found with the provided AirportCode.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-
-    ## Update Airport
-    def update_airport():
-        airportCode = input("Enter Airport Code to update: ")
-        newCode = input("Enter new airport Code: ")
-        name = input("Enter new airport name: ")
-        location = input("Enter new airport location: ")
-        update_query = """
-            UPDATE Airport 
-            SET AirlineCode = %s, AirportName = %s, Location = %s,  
-            WHERE AirportCode = %s;
-        """
-        # Execute the query
-        try:
-            cursor.execute(update_query, (newCode, name, location, airportCode))
-            connection.commit()
-            print("Data updated successfully.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-
-    ## Update Passenger
-    def update_passenger():
-        # Validate PassportID format: one letter followed by exactly eight digits
-        while True:
-            passport_id = input("Enter the passenger's PassportID to update (format: X########): ")
-            if re.fullmatch(r"[A-Za-z]\d{8}", passport_id):
-                break
-            else:
-                print("Invalid PassportID format. Please enter one letter followed by 8 digits (e.g., A12345678).")
-
-        # Collect new information for the passenger
-        first_name = input("Enter new legal first name: ")
-        last_name = input("Enter new legal last name: ")
-
-        # Create update query
-        update_query = """
-            UPDATE Passenger
-            SET FirstName = %s, LastName = %s
-            WHERE PassportID = %s
-        """
-        # Prepare data to update
-        passenger_data = (first_name, last_name, passport_id)
-
-        # Execute the query
-        try:
-            cursor.execute(update_query, passenger_data)
-            connection.commit()  # Commit transaction
-            if cursor.rowcount > 0:
-                print("Passenger data updated successfully.")
-            else:
-                print("No passenger found with the provided PassportID.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-    
-    ## Update Booking
-    def update_booking():
-        # Get the BookingID to identify the record to update
-        booking_id = input("Enter BookingID to update: ")
-
-        # Collect new information for the booking
-        passenger_id = input("Enter new PassengerID: ")
-        flight_id = input("Enter new FlightID: ")
-        
-        # Validate SeatNumber format, e.g., 32C
-        while True:
-            seat_num = input("Enter new seat number (e.g., 32C): ").upper()
-            if re.fullmatch(r"\d{1,2}[A-Z]", seat_num):
-                break
-            else:
-                print("Invalid seat number format. Please enter a number followed by a letter (e.g., 32C).")
-
-        # Get and validate the date
-        date = get_date()  # Assuming get_date() is a function that handles date input validation
-
-        # Create update query
-        update_query = """
-            UPDATE Booking
-            SET PassengerID = %s, FlightID = %s, SeatNumber = %s, Date = %s
-            WHERE BookingID = %s
-        """
-        
-        # Prepare data to update
-        booking_data = (passenger_id, flight_id, seat_num, date, booking_id)
-
-        # Execute the query
-        try:
-            cursor.execute(update_query, booking_data)
-            connection.commit()  # Commit transaction
-            if cursor.rowcount > 0:
-                print("Booking data updated successfully.")
-            else:
-                print("No booking found with the provided BookingID.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-
-    ## Update Flight
-    def update_flight():
-        flight_num = input("Enter Flight Number to update: ")
-        # Validate AirlineCode format: exactly two uppercase letters
-        while True:
-            airline_code = input("Enter new airline code (2 letters): ").upper()
-            if re.fullmatch(r"[A-Z]{2}", airline_code):
-                break
-            else:
-                print("Invalid Airline Code. Please enter exactly two uppercase letters (e.g., 'AA').")
-
-        # Validate PlaneID format: "N###XX" where XX matches the airline code
-        while True:
-            plane_id = input(f"Enter new plane ID (format: N###{airline_code}): ").upper()
-            if re.fullmatch(rf"N\d{{3}}{airline_code}", plane_id):
-                break
-            else:
-                print(f"Invalid PlaneID format. Please enter in the format N###{airline_code} (e.g., N123{airline_code}).")
-
-        # Validate DepartingAirportCode format: exactly three uppercase letters
-        while True:
-            departing = input("Enter new departing airport code (3 letters): ").upper()
-            if re.fullmatch(r"[A-Z]{3}", departing):
-                break
-            else:
-                print("Invalid Departing Airport Code. Please enter exactly three uppercase letters (e.g., 'JFK').")
-
-        # Validate ArrivingAirportCode format: exactly three uppercase letters
-        while True:
-            arriving = input("Enter new arriving airport code (3 letters): ").upper()
-            if re.fullmatch(r"[A-Z]{3}", arriving):
-                break
-            else:
-                print("Invalid Arriving Airport Code. Please enter exactly three uppercase letters (e.g., 'LAX').")
-
-        # Get and validate date
-        print("Enter new date: ")
-        date = get_date()
-
-        # Ensure Status is only text (remove any numeric or special characters for simplicity)
-        status = input("Enter new status (letters only): ")
-        if not status.isalpha():
-            print("Warning: Status should contain only letters. Please enter letters only.")
-
-        # Prepare the update query
-        update_query = """
-            UPDATE Flight 
-            SET AirlineCode = %s, PlaneID = %s, DepartingAirportCode = %s, 
-                ArrivingAirportCode = %s, Date = %s, Status = %s 
-            WHERE FlightNum = %s;
-        """
-        # Execute the query
-        try:
-            cursor.execute(update_query, (airline_code, plane_id, departing, arriving, date, status, flight_num))
-            connection.commit()
-            print("Data updated successfully.")
-        except mysql.connector.Error as err:
-            print(f"Error: {err}")
-            connection.rollback()  # Roll back if any error occurs
-
-
 
 ## Insert Data
 
@@ -595,6 +373,203 @@ try:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             connection.rollback()  # Roll back if any error occurs
+   
+    ## Update Booking
+    def update_booking():
+        # Get the BookingID to identify the record to update
+        booking_id = input("Enter BookingID to update: ")
+
+        # Collect new information for the booking
+        passenger_id = input("Enter new PassengerID: ")
+        flight_id = input("Enter new FlightID: ")
+        
+        # Validate SeatNumber format, e.g., 32C
+        while True:
+            seat_num = input("Enter new seat number (e.g., 32C): ").upper()
+            if re.fullmatch(r"\d{1,2}[A-Z]", seat_num):
+                break
+            else:
+                print("Invalid seat number format. Please enter a number followed by a letter (e.g., 32C).")
+
+        # Get and validate the date
+        date = get_date()  # Assuming get_date() is a function that handles date input validation
+
+        # Create update query
+        update_query = """
+            UPDATE Booking
+            SET PassengerID = %s, FlightID = %s, SeatNumber = %s, Date = %s
+            WHERE BookingID = %s
+        """
+        
+        # Prepare data to update
+        booking_data = (passenger_id, flight_id, seat_num, date, booking_id)
+
+        # Execute the query
+        try:
+            cursor.execute(update_query, booking_data)
+            connection.commit()  # Commit transaction
+            if cursor.rowcount > 0:
+                print("Booking data updated successfully.")
+            else:
+                print("No booking found with the provided BookingID.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
+    ## Update Flight
+    def update_flight():
+        flight_num = input("Enter Flight Number to update: ")
+        # Validate AirlineCode format: exactly two uppercase letters
+        while True:
+            airline_code = input("Enter new airline code (2 letters): ").upper()
+            if re.fullmatch(r"[A-Z]{2}", airline_code):
+                break
+            else:
+                print("Invalid Airline Code. Please enter exactly two uppercase letters (e.g., 'AA').")
+
+        # Validate PlaneID format: "N###XX" where XX matches the airline code
+        while True:
+            plane_id = input(f"Enter new plane ID (format: N###{airline_code}): ").upper()
+            if re.fullmatch(rf"N\d{{3}}{airline_code}", plane_id):
+                break
+            else:
+                print(f"Invalid PlaneID format. Please enter in the format N###{airline_code} (e.g., N123{airline_code}).")
+
+        # Validate DepartingAirportCode format: exactly three uppercase letters
+        while True:
+            departing = input("Enter new departing airport code (3 letters): ").upper()
+            if re.fullmatch(r"[A-Z]{3}", departing):
+                break
+            else:
+                print("Invalid Departing Airport Code. Please enter exactly three uppercase letters (e.g., 'JFK').")
+
+        # Validate ArrivingAirportCode format: exactly three uppercase letters
+        while True:
+            arriving = input("Enter new arriving airport code (3 letters): ").upper()
+            if re.fullmatch(r"[A-Z]{3}", arriving):
+                break
+            else:
+                print("Invalid Arriving Airport Code. Please enter exactly three uppercase letters (e.g., 'LAX').")
+
+        # Get and validate date
+        print("Enter new date: ")
+        date = get_date()
+
+        # Ensure Status is only text (remove any numeric or special characters for simplicity)
+        status = input("Enter new status (letters only): ")
+        if not status.isalpha():
+            print("Warning: Status should contain only letters. Please enter letters only.")
+
+        # Prepare the update query
+        update_query = """
+            UPDATE Flight 
+            SET AirlineCode = %s, PlaneID = %s, DepartingAirportCode = %s, 
+                ArrivingAirportCode = %s, Date = %s, Status = %s 
+            WHERE FlightNum = %s;
+        """
+        # Execute the query
+        try:
+            cursor.execute(update_query, (airline_code, plane_id, departing, arriving, date, status, flight_num))
+            connection.commit()
+            print("Data updated successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
+            ## Update data
+
+    ## Update Plane
+    def update_plane():
+        plane_id = input("Enter Plane ID to update: ")
+        # Validate AirlineCode format: must be exactly two uppercase letters
+        while True:
+            airline = input("Enter new airline associated with the plane (2-letter code): ").upper()
+            if re.fullmatch(r"[A-Z]{2}", airline):
+                break
+            else:
+                print("Invalid Airline Code. Please enter exactly two uppercase letters (e.g., 'AA').")
+
+        # Prepare the update query
+        update_query = "UPDATE Plane SET AirlineCode = %s WHERE PlaneID = %s"
+        
+        # Execute the query
+        try:
+            cursor.execute(update_query, (airline, plane_id))
+            connection.commit()
+            print("Data updated successfully.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
+    ## Update Airline
+    def update_airport():
+        # Validate airport code format: exactly three uppercase letters
+        while True:
+            airport_code = input("Enter the 3-character airport code to update: ").upper()
+            if re.fullmatch(r"[A-Z]{3}", airport_code):
+                break
+            else:
+                print("Invalid Airport Code. Please enter exactly three uppercase letters (e.g., 'JFK').")
+
+        # Collect new information for the airport
+        airport_name = input("Enter the new airport name: ")
+        location = input("Enter the new airport location: ")
+
+        # Create update query
+        update_query = """
+            UPDATE Airport
+            SET AirportName = %s, Location = %s
+            WHERE AirportCode = %s
+        """
+        # Prepare data to update
+        airport_data = (airport_name, location, airport_code)
+
+        # Execute the query
+        try:
+            cursor.execute(update_query, airport_data)
+            connection.commit()  # Commit transaction
+            if cursor.rowcount > 0:
+                print("Airport data updated successfully.")
+            else:
+                print("No airport found with the provided AirportCode.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
+
+    ## Update Passenger
+    def update_passenger():
+        # Validate PassportID format: one letter followed by exactly eight digits
+        while True:
+            passport_id = input("Enter the passenger's PassportID to update (format: X########): ")
+            if re.fullmatch(r"[A-Za-z]\d{8}", passport_id):
+                break
+            else:
+                print("Invalid PassportID format. Please enter one letter followed by 8 digits (e.g., A12345678).")
+
+        # Collect new information for the passenger
+        first_name = input("Enter new legal first name: ")
+        last_name = input("Enter new legal last name: ")
+
+        # Create update query
+        update_query = """
+            UPDATE Passenger
+            SET FirstName = %s, LastName = %s
+            WHERE PassportID = %s
+        """
+        # Prepare data to update
+        passenger_data = (first_name, last_name, passport_id)
+
+        # Execute the query
+        try:
+            cursor.execute(update_query, passenger_data)
+            connection.commit()  # Commit transaction
+            if cursor.rowcount > 0:
+                print("Passenger data updated successfully.")
+            else:
+                print("No passenger found with the provided PassportID.")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            connection.rollback()  # Roll back if any error occurs
 
 ## Delete Data
 
@@ -704,25 +679,6 @@ try:
 ## Advanced Functions (Deliverable 5)
 
 ## Main Program
-    ##def select_table():
-        print("\nSelect a table:")
-        print("1. Planes")
-        print("2. Airlines")
-        print("3. Flights")
-        print("4. Airports")
-        print("5. Passengers")
-        print("6. Bookings")
-        table_choice = input("Enter your table choice: ")
-        
-        tables = {
-            '1': 'Planes',
-            '2': 'Airlines',
-            '3': 'Flights',
-            '4': 'Airports',
-            '5': 'Passengers',
-            '6': 'Bookings'
-        }
-        return tables.get(table_choice, None)
 
     def main():
         figlet = pyfiglet.Figlet(font='doom')
