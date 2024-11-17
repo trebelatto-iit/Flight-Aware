@@ -703,86 +703,299 @@ try:
             for row in results:
                 print(f"Airport Code: {row[0]}, Airport Name: {row[1]}, Total Flights: {row[2]}")
 
-        def get_top_10_frequent_fliers():
-            # SQL query to get the top 10 frequent fliers
-            query = """
-            SELECT 
-                p.PassengerID,
-                p.FirstName,
-                p.LastName,
-                COUNT(b.BookingID) AS TotalBookings
-            FROM 
-                passenger p
-            JOIN 
-                booking b ON p.PassengerID = b.PassengerID
-            GROUP BY 
-                p.PassengerID, p.FirstName, p.LastName
-            ORDER BY 
-                TotalBookings DESC
-            LIMIT 10;
-            """
+    def get_top_10_frequent_fliers():
+        # SQL query to get the top 10 frequent fliers
+        query = """
+        SELECT 
+            p.PassengerID,
+            p.FirstName,
+            p.LastName,
+            COUNT(b.BookingID) AS TotalBookings
+        FROM 
+            passenger p
+        JOIN 
+            booking b ON p.PassengerID = b.PassengerID
+        GROUP BY 
+            p.PassengerID, p.FirstName, p.LastName
+        ORDER BY 
+            TotalBookings DESC
+        LIMIT 10;
+        """
 
-            # Execute the query using the global cursor
-            cursor.execute(query)
+        # Execute the query using the global cursor
+        cursor.execute(query)
 
-            # Fetch the results
-            results = cursor.fetchall()
+        # Fetch the results
+        results = cursor.fetchall()
 
-            # Print the results
+        # Print the results
+        for row in results:
+            print(f"Passenger ID: {row[0]}, Name: {row[1]} {row[2]}, Total Bookings: {row[3]}")
+    
+    def get_flight_history_for_passenger():
+        # Prompt the user for a passenger ID
+        passenger_id = input("Enter Passenger ID: ")
+
+        # Check if the ID is valid (exists in the database)
+        validation_query = "SELECT COUNT(*) FROM passenger WHERE PassengerID = %s"
+        cursor.execute(validation_query, (passenger_id,))
+        result = cursor.fetchone()
+
+        if result[0] == 0:
+            print("Invalid Passenger ID. Please try again.")
+            return
+
+        # SQL query to get the flight history for the valid passenger
+        query = """
+        SELECT 
+            b.BookingID,
+            f.FlightNum,
+            f.Date,
+            f.DepartingAirportCode,
+            f.ArrivingAirportCode,
+            f.Status,
+            p.FirstName,
+            p.LastName
+        FROM 
+            booking b
+        JOIN 
+            flight f ON b.FlightID = f.FlightID
+        JOIN 
+            passenger p ON b.PassengerID = p.PassengerID
+        WHERE 
+            p.PassengerID = %s
+        ORDER BY 
+            f.Date;
+        """
+
+        # Execute the query for the valid passenger ID
+        cursor.execute(query, (passenger_id,))
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Print the results
+        if results:
+            print(f"\nFlight history for Passenger ID {passenger_id}:")
             for row in results:
-                print(f"Passenger ID: {row[0]}, Name: {row[1]} {row[2]}, Total Bookings: {row[3]}")
-        
-        def get_flight_history_for_passenger():
-            # Prompt the user for a passenger ID
-            passenger_id = input("Enter Passenger ID: ")
+                print(f"Booking ID: {row[0]}, Flight Number: {row[1]}, Date: {row[2]}, "
+                    f"From: {row[3]}, To: {row[4]}, Status: {row[5]}, "
+                    f"Passenger Name: {row[6]} {row[7]}")
+        else:
+            print(f"No flight history found for Passenger ID {passenger_id}.")
 
-            # Check if the ID is valid (exists in the database)
-            validation_query = "SELECT COUNT(*) FROM passenger WHERE PassengerID = %s"
-            cursor.execute(validation_query, (passenger_id,))
-            result = cursor.fetchone()
+    # OLAP
+    def get_cumulative_total_flights_for_airline():
+        # Prompt the user for an airline code
+        airline_code = input("Enter Airline Code: ")
 
-            if result[0] == 0:
-                print("Invalid Passenger ID. Please try again.")
-                return
+        # SQL query to find the cumulative total flights up to each date for an airline
+        query = """
+        SELECT 
+            f.Date,
+            COUNT(f.FlightID) AS DailyFlights,
+            SUM(COUNT(f.FlightID)) OVER (ORDER BY f.Date) AS CumulativeFlights
+        FROM 
+            flight f
+        WHERE 
+            f.AirlineCode = %s
+        GROUP BY 
+            f.Date
+        ORDER BY 
+            f.Date;
+        """
 
-            # SQL query to get the flight history for the valid passenger
-            query = """
+        # Execute the query using the global cursor
+        cursor.execute(query, (airline_code,))
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Print the results
+        if results:
+            print(f"\nCumulative total flights for Airline Code '{airline_code}':")
+            for row in results:
+                print(f"Date: {row[0]}, Daily Flights: {row[1]}, Cumulative Flights: {row[2]}")
+        else:
+            print(f"No flight data found for Airline Code '{airline_code}'.")
+
+    def get_moving_average_of_flights_for_airport():
+        # Prompt the user for the airport code
+        airport_code = input("Enter Airport Code: ")
+
+        # SQL query to calculate the 7-day moving average of flights for the specified airport
+        query = """
+        SELECT 
+            f.DepartingAirportCode,
+            f.Date,
+            COUNT(f.FlightID) AS DailyFlights,
+            AVG(COUNT(f.FlightID)) OVER (
+                PARTITION BY f.DepartingAirportCode 
+                ORDER BY f.Date 
+                ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+            ) AS MovingAvgFlights
+        FROM 
+            flight f
+        WHERE 
+            f.DepartingAirportCode = %s
+        GROUP BY 
+            f.DepartingAirportCode, f.Date
+        ORDER BY 
+            f.Date;
+        """
+
+        # Execute the query using the global cursor
+        cursor.execute(query, (airport_code,))
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Print the results
+        if results:
+            print(f"\n7-day moving average of flights for Airport '{airport_code}':")
+            for row in results:
+                print(f"Date: {row[1]}, Daily Flights: {row[2]}, 7-Day Moving Avg Flights: {row[3]:.2f}")
+        else:
+            print(f"No flight data available for Airport '{airport_code}'.")
+
+    # Advanced Aggregate Functions
+    def get_average_passengers_per_flight_per_day():
+        # SQL query to find the average number of passengers per flight per day
+        query = """
+        SELECT 
+            f.Date,
+            AVG(subquery.PassengerCount) AS AvgPassengersPerFlight
+        FROM 
+            flight f
+        JOIN (
             SELECT 
-                b.BookingID,
-                f.FlightNum,
-                f.Date,
-                f.DepartingAirportCode,
-                f.ArrivingAirportCode,
-                f.Status,
-                p.FirstName,
-                p.LastName
+                b.FlightID,
+                COUNT(b.PassengerID) AS PassengerCount
             FROM 
                 booking b
-            JOIN 
-                flight f ON b.FlightID = f.FlightID
-            JOIN 
-                passenger p ON b.PassengerID = p.PassengerID
-            WHERE 
-                p.PassengerID = %s
-            ORDER BY 
-                f.Date;
-            """
+            GROUP BY 
+                b.FlightID
+        ) subquery ON f.FlightID = subquery.FlightID
+        GROUP BY 
+            f.Date
+        ORDER BY 
+            f.Date;
+        """
 
-            # Execute the query for the valid passenger ID
-            cursor.execute(query, (passenger_id,))
+        # Execute the query using the global cursor
+        cursor.execute(query)
 
-            # Fetch the results
-            results = cursor.fetchall()
+        # Fetch the results
+        results = cursor.fetchall()
 
-            # Print the results
-            if results:
-                print(f"\nFlight history for Passenger ID {passenger_id}:")
-                for row in results:
-                    print(f"Booking ID: {row[0]}, Flight Number: {row[1]}, Date: {row[2]}, "
-                        f"From: {row[3]}, To: {row[4]}, Status: {row[5]}, "
-                        f"Passenger Name: {row[6]} {row[7]}")
-            else:
-                print(f"No flight history found for Passenger ID {passenger_id}.")
+        # Print the results
+        if results:
+            print("\nAverage number of passengers per flight per day:")
+            for row in results:
+                print(f"Date: {row[0]}, Average Passengers: {row[1]:.2f}")
+        else:
+            print("No data available for average passengers per flight per day.")
+
+    # Complex Joins and Nested Queries
+    def get_flights_with_highest_passenger_count():
+        # SQL query to find flights with the highest number of passengers booked
+        query = """
+        SELECT 
+            f.FlightNum,
+            f.Date,
+            f.DepartingAirportCode,
+            f.ArrivingAirportCode,
+            booking_count.TotalPassengers
+        FROM 
+            flight f
+        JOIN (
+            SELECT 
+                b.FlightID,
+                COUNT(b.PassengerID) AS TotalPassengers
+            FROM 
+                booking b
+            GROUP BY 
+                b.FlightID
+        ) booking_count ON f.FlightID = booking_count.FlightID
+        ORDER BY 
+            booking_count.TotalPassengers DESC
+        LIMIT 5;
+        """
+
+        # Execute the query using the global cursor
+        cursor.execute(query)
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Print the results
+        if results:
+            print("\nFlights with the highest number of passengers booked:")
+            for row in results:
+                print(f"Flight Number: {row[0]}, Date: {row[1]}, From: {row[2]}, To: {row[3]}, "
+                    f"Total Passengers: {row[4]}")
+        else:
+            print("No data available for flights with passenger counts.")
+
+    # sorted flight info
+    def get_flight_information_sorted():
+        # Prompt the user to select a sorting option
+        print("Choose a field to sort by:")
+        print("1. Airport")
+        print("2. Airline")
+        print("3. Flight Number")
+        print("4. Date")
+        
+        # Map user input to SQL column names
+        sort_options = {
+            '1': 'DepartingAirportCode',
+            '2': 'AirlineCode',
+            '3': 'FlightNum',
+            '4': 'Date'
+        }
+        
+        # Get the user's choice
+        choice = input("Enter the number corresponding to your choice: ")
+
+        # Validate the user's choice
+        if choice not in sort_options:
+            print("Invalid choice. Please select a valid option.")
+            return
+        
+        # Store the selected sorting column
+        sort_column = sort_options[choice]
+
+        # SQL query to fetch flight information sorted by the chosen column
+        query = f"""
+        SELECT 
+            f.FlightNum,
+            f.Date,
+            f.DepartingAirportCode,
+            f.ArrivingAirportCode,
+            f.AirlineCode,
+            f.Status
+        FROM 
+            flight f
+        ORDER BY 
+            {sort_column};
+        """
+
+        # Execute the query using the global cursor
+        cursor.execute(query)
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Print the results
+        if results:
+            print(f"\nFlight information sorted by {sort_column}:")
+            for row in results:
+                print(f"Flight Number: {row[0]}, Date: {row[1]}, Departing Airport: {row[2]}, "
+                    f"Arriving Airport: {row[3]}, Airline: {row[4]}, Status: {row[5]}")
+        else:
+            print("No flight data available.")
+
+
 
 ## Main Program
 
