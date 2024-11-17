@@ -676,7 +676,113 @@ try:
             connection.rollback()
 
 
-## Advanced Functions (Deliverable 5)
+    ## Advanced Functions (Deliverable 5)
+    def get_top_5_busiest_airports():
+            # SQL query to get the top 5 busiest airports
+            query = """
+            SELECT 
+                a.AirportCode,
+                a.AirportName,
+                COUNT(f.FlightID) AS TotalFlights
+            FROM 
+                airport a
+            JOIN 
+                flight f ON a.AirportCode = f.DepartingAirportCode OR a.AirportCode = f.ArrivingAirportCode
+            GROUP BY 
+                a.AirportCode, a.AirportName
+            ORDER BY 
+                TotalFlights DESC
+            LIMIT 5;
+            """
+
+            # Execute the query
+            cursor.execute(query)
+
+            # Fetch and return the results
+            results = cursor.fetchall()
+            for row in results:
+                print(f"Airport Code: {row[0]}, Airport Name: {row[1]}, Total Flights: {row[2]}")
+
+        def get_top_10_frequent_fliers():
+            # SQL query to get the top 10 frequent fliers
+            query = """
+            SELECT 
+                p.PassengerID,
+                p.FirstName,
+                p.LastName,
+                COUNT(b.BookingID) AS TotalBookings
+            FROM 
+                passenger p
+            JOIN 
+                booking b ON p.PassengerID = b.PassengerID
+            GROUP BY 
+                p.PassengerID, p.FirstName, p.LastName
+            ORDER BY 
+                TotalBookings DESC
+            LIMIT 10;
+            """
+
+            # Execute the query using the global cursor
+            cursor.execute(query)
+
+            # Fetch the results
+            results = cursor.fetchall()
+
+            # Print the results
+            for row in results:
+                print(f"Passenger ID: {row[0]}, Name: {row[1]} {row[2]}, Total Bookings: {row[3]}")
+        
+        def get_flight_history_for_passenger():
+            # Prompt the user for a passenger ID
+            passenger_id = input("Enter Passenger ID: ")
+
+            # Check if the ID is valid (exists in the database)
+            validation_query = "SELECT COUNT(*) FROM passenger WHERE PassengerID = %s"
+            cursor.execute(validation_query, (passenger_id,))
+            result = cursor.fetchone()
+
+            if result[0] == 0:
+                print("Invalid Passenger ID. Please try again.")
+                return
+
+            # SQL query to get the flight history for the valid passenger
+            query = """
+            SELECT 
+                b.BookingID,
+                f.FlightNum,
+                f.Date,
+                f.DepartingAirportCode,
+                f.ArrivingAirportCode,
+                f.Status,
+                p.FirstName,
+                p.LastName
+            FROM 
+                booking b
+            JOIN 
+                flight f ON b.FlightID = f.FlightID
+            JOIN 
+                passenger p ON b.PassengerID = p.PassengerID
+            WHERE 
+                p.PassengerID = %s
+            ORDER BY 
+                f.Date;
+            """
+
+            # Execute the query for the valid passenger ID
+            cursor.execute(query, (passenger_id,))
+
+            # Fetch the results
+            results = cursor.fetchall()
+
+            # Print the results
+            if results:
+                print(f"\nFlight history for Passenger ID {passenger_id}:")
+                for row in results:
+                    print(f"Booking ID: {row[0]}, Flight Number: {row[1]}, Date: {row[2]}, "
+                        f"From: {row[3]}, To: {row[4]}, Status: {row[5]}, "
+                        f"Passenger Name: {row[6]} {row[7]}")
+            else:
+                print(f"No flight history found for Passenger ID {passenger_id}.")
 
 ## Main Program
 
