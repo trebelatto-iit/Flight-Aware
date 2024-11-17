@@ -939,8 +939,14 @@ try:
 
     # sorted flight info
     def get_flight_information_sorted():
+        # Prompt the user to filter by specific criteria
+        print("Enter filter criteria (leave blank if not applicable):")
+        airport_code = input("Filter by Departing Airport Code: ")
+        airline_code = input("Filter by Airline Code: ")
+        date = input("Filter by Date (YYYY-MM-DD, or leave blank): ")
+
         # Prompt the user to select a sorting option
-        print("Choose a field to sort by:")
+        print("\nChoose a field to sort by:")
         print("1. Airport")
         print("2. Airline")
         print("3. Flight Number")
@@ -953,20 +959,20 @@ try:
             '3': 'FlightNum',
             '4': 'Date'
         }
-        
-        # Get the user's choice
+
+        # Get the user's choice for sorting
         choice = input("Enter the number corresponding to your choice: ")
 
         # Validate the user's choice
         if choice not in sort_options:
             print("Invalid choice. Please select a valid option.")
             return
-        
+
         # Store the selected sorting column
         sort_column = sort_options[choice]
 
-        # SQL query to fetch flight information sorted by the chosen column
-        query = f"""
+        # Base query
+        query = """
         SELECT 
             f.FlightNum,
             f.Date,
@@ -976,24 +982,33 @@ try:
             f.Status
         FROM 
             flight f
+        WHERE 
+            (%s IS NULL OR f.DepartingAirportCode = %s)
+            AND (%s IS NULL OR f.AirlineCode = %s)
+            AND (%s IS NULL OR f.Date = %s)
         ORDER BY 
             {sort_column};
-        """
+        """.format(sort_column=sort_column)
 
         # Execute the query using the global cursor
-        cursor.execute(query)
+        cursor.execute(query, (airport_code or None, airport_code or None, 
+                            airline_code or None, airline_code or None, 
+                            date or None, date or None))
 
         # Fetch the results
         results = cursor.fetchall()
 
         # Print the results
         if results:
-            print(f"\nFlight information sorted by {sort_column}:")
+            print(f"\nFlight information filtered and sorted by {sort_column}:")
             for row in results:
                 print(f"Flight Number: {row[0]}, Date: {row[1]}, Departing Airport: {row[2]}, "
                     f"Arriving Airport: {row[3]}, Airline: {row[4]}, Status: {row[5]}")
         else:
-            print("No flight data available.")
+            print("No flight data available for the given filters.")
+
+
+
 
 
 
@@ -1011,10 +1026,11 @@ try:
             print("3. Plane")
             print("4. Flight")
             print("5. Booking")
-            print("6. Exit")
+            print("6. Other")
+            print("7. Exit")
             table_choice = input("Enter your choice: ")
 
-            if table_choice == '6':
+            if table_choice == '7':
                 print(figlet.renderText('THANK YOU!'))
                 print("Exiting program.")
                 break
@@ -1022,7 +1038,6 @@ try:
             # Map the user choice to table operations
             if table_choice == '1':
                 table_name = "Passenger"
-                ##Set read, insert, update, delete, to choice
                 def read():
                     read_passenger()
                 def insert():
@@ -1034,7 +1049,6 @@ try:
 
             elif table_choice == '2':
                 table_name = "Airport"
-                 ##Set read, insert, update, delete, to choice
                 def read():
                     read_airport()
                 def insert():
@@ -1046,7 +1060,6 @@ try:
 
             elif table_choice == '3':
                 table_name = "Plane"
-                ##Set read, insert, update, delete, to choice
                 def read():
                     read_plane()
                 def insert():
@@ -1058,7 +1071,6 @@ try:
 
             elif table_choice == '4':
                 table_name = "Flight"
-                ##Set read, insert, update, delete, to choice
                 def read():
                     read_flight()
                 def insert():
@@ -1070,7 +1082,6 @@ try:
 
             elif table_choice == '5':
                 table_name = "Booking"
-                ##Set read, insert, update, delete, to choice
                 def read():
                     read_booking()
                 def insert():
@@ -1079,6 +1090,34 @@ try:
                     update_booking()
                 def delete():
                     delete_booking()
+
+            elif table_choice == '6':
+                while True:
+                    print("\nOther Operations:")
+                    print("1. Get cumulative total flights for an airline")
+                    print("2. Get average number of passengers per flight per day")
+                    print("3. Get flights with the highest number of passengers booked")
+                    print("4. Calculate 7-day moving average of flights for an airport")
+                    print("5. Get flight information sorted by user choice")
+                    print("6. Back to main menu")
+                    other_choice = input("Enter your choice: ")
+
+                    if other_choice == '1':
+                        get_cumulative_total_flights_for_airline()
+                    elif other_choice == '2':
+                        get_average_passengers_per_flight_per_day()
+                    elif other_choice == '3':
+                        get_flights_with_highest_passenger_count()
+                    elif other_choice == '4':
+                        get_moving_average_of_flights_for_airport()
+                    elif other_choice == '5':
+                        get_flight_information_sorted()
+                    elif other_choice == '6':
+                        break
+                    else:
+                        print("Invalid choice. Please select a valid option.")
+                continue  # Return to the main menu after "Other" operations
+
             else:
                 print("Invalid choice. Please select a valid option.")
                 continue
@@ -1093,7 +1132,6 @@ try:
                 action_choice = input("Enter your choice: ")
 
                 if action_choice == '1':
-                    # Placeholder for read data function call
                     print("Reading data from", table_name)
                     read()
                 elif action_choice == '2':
@@ -1101,7 +1139,6 @@ try:
                 elif action_choice == '3':
                     update()
                 elif action_choice == '4':
-                    # Placeholder for delete data function call
                     print("Deleting data from", table_name)
                     delete()
                 elif action_choice == '5':
