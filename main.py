@@ -1007,9 +1007,150 @@ try:
         else:
             print("No flight data available for the given filters.")
 
+    def get_bookings_by_passenger():
+        """
+        Prompt the user for a PassengerID and display their bookings.
+        Assumes a global database connection.
+        """
+        try:
+            # Prompt the user for PassengerID
+            passenger_id = int(input("Enter PassengerID: "))
+            
+            
+            # Query to fetch bookings for the given PassengerID
+            query = """
+            SELECT 
+                booking.BookingID, 
+                booking.FlightID, 
+                booking.SeatNumber, 
+                booking.Date,
+                flight.AirlineCode,
+                flight.FlightNum,
+                flight.DepartingAirportCode,
+                flight.ArrivingAirportCode,
+                flight.Status
+            FROM booking
+            JOIN flight ON booking.FlightID = flight.FlightID
+            WHERE booking.PassengerID = %s
+            """
+            
+            # Execute the query
+            cursor.execute(query, (passenger_id,))
+            results = cursor.fetchall()
+            
+            # Check if any bookings exist
+            if not results:
+                print(f"No bookings found for PassengerID {passenger_id}.")
+                return
+            
+            # Display the bookings
+            print(f"Bookings for PassengerID {passenger_id}:")
+            for booking in results:
+                print(f"""
+                Booking ID: {booking['BookingID']}
+                Flight ID: {booking['FlightID']}
+                Airline: {booking['AirlineCode']}
+                Flight Number: {booking['FlightNum']}
+                Departing: {booking['DepartingAirportCode']}
+                Arriving: {booking['ArrivingAirportCode']}
+                Date: {booking['Date']}
+                Seat: {booking['SeatNumber']}
+                Status: {booking['Status']}
+                """)
+        
+        except ValueError:
+            print("Invalid PassengerID. Please enter a numeric value.")
+        except Exception as err:
+            print(f"Error: {err}")
 
+    def passengers_with_all_flight_bookings_for_airport():
+        """
+        Prompt the user for an airport code, validate it, and find passengers who have 
+        bookings for all flights departing from that airport.
 
+        Args:
+            connection: A MySQL database connection object.
 
+        Returns:
+            None: Prints the PassengerIDs and relevant details if found.
+        """
+        try:
+            # Prompt the user for the airport code
+            airport_code = input("Enter the departing airport code: ").upper()
+
+            # Validate the airport code
+            validation_query = "SELECT AirportCode FROM airport WHERE AirportCode = %s"
+            cursor.execute(validation_query, (airport_code,))
+            valid_airport = cursor.fetchone()
+
+            if not valid_airport:
+                print(f"Invalid airport code: {airport_code}. Please enter a valid code.")
+                return
+
+            # Main query to find passengers with bookings for all flights departing from the given airport
+            query = """
+            SELECT PassengerID
+            FROM booking
+            WHERE FlightID IN (
+                SELECT FlightID 
+                FROM flight 
+                WHERE DepartingAirportCode = %s
+            )
+            GROUP BY PassengerID
+            HAVING COUNT(DISTINCT FlightID) = (
+                SELECT COUNT(DISTINCT FlightID) 
+                FROM flight 
+                WHERE DepartingAirportCode = %s
+            );
+            """
+
+            # Execute the main query
+            cursor.execute(query, (airport_code, airport_code))
+            results = cursor.fetchall()
+
+            # Check if any passengers match the criteria
+            if not results:
+                print(f"No passengers have bookings for all flights departing from {airport_code}.")
+            else:
+                print(f"Passengers with bookings for all flights departing from {airport_code}:")
+                for row in results:
+                    print(f"PassengerID: {row['PassengerID']}")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+   
+    def get_departure_counts_ranked():
+        """
+        Retrieves and ranks airports by their number of departures.
+        """
+        try:
+            # SQL query using WITH clause to calculate departure counts and rank them
+            query = """
+            WITH DepartureCounts AS (
+                SELECT DepartingAirportCode, COUNT(*) AS DepartureCount
+                FROM flight
+                GROUP BY DepartingAirportCode
+            )
+            SELECT DepartingAirportCode, DepartureCount
+            FROM DepartureCounts
+            ORDER BY DepartureCount DESC;
+            """
+            
+            # Execute the query using the global cursor
+            cursor.execute(query)
+
+            # Fetch the results
+            results = cursor.fetchall()
+
+            # Print the results
+            if results:
+                print("\nAirports ranked by number of departures:")
+                for row in results:
+                    print(f"Airport Code: {row[0]}, Departure Count: {row[1]}")
+            else:
+                print("No data available for airport departure counts.")
+        except Exception as e:
+            print(f"An error occurred while retrieving departure counts: {e}")
 
 
 ## Main Program
@@ -1099,7 +1240,12 @@ try:
                     print("3. Get flights with the highest number of passengers booked")
                     print("4. Calculate 7-day moving average of flights for an airport")
                     print("5. Get flight information sorted by user choice")
-                    print("6. Back to main menu")
+                    print("6. Get top 5 busiest airports")
+                    print("7. Get top 10 frequent fliers")
+                    print("8. Get flight history for a passenger")
+                    print("9. Get ranked departure counts per airport")
+                    print("10. Back to main menu")
+                    
                     other_choice = input("Enter your choice: ")
 
                     if other_choice == '1':
@@ -1113,15 +1259,18 @@ try:
                     elif other_choice == '5':
                         get_flight_information_sorted()
                     elif other_choice == '6':
+                        get_top_5_busiest_airports()
+                    elif other_choice == '7':
+                        get_top_10_frequent_fliers()
+                    elif other_choice == '8':
+                        get_flight_history_for_passenger()
+                    elif other_choice == '9':
+                        get_departure_counts_ranked()
+                    elif other_choice == '10':
                         break
                     else:
                         print("Invalid choice. Please select a valid option.")
-                continue  # Return to the main menu after "Other" operations
-
-            else:
-                print("Invalid choice. Please select a valid option.")
-                continue
-
+                continue  
             while True:
                 print(f"\n{table_name} Table Operations:")
                 print("1. Read data")
