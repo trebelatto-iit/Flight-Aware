@@ -1119,6 +1119,7 @@ try:
         except Exception as e:
             print(f"An error occurred: {e}")
    
+   ## Set Operation and Aggregate function
     def get_departure_counts_ranked():
         """
         Retrieves and ranks airports by their number of departures.
@@ -1151,7 +1152,6 @@ try:
                 print("No data available for airport departure counts.")
         except Exception as e:
             print(f"An error occurred while retrieving departure counts: {e}")
-
 
 ## Main Program
 
